@@ -11,8 +11,9 @@ Need to check it works again
 
 import ctypes
 import os
-import random
+import numpy as np
 import tkinter as tk
+import pandas as pd
 
 
 
@@ -22,17 +23,19 @@ import tkinter as tk
 def Random_Wallpaper():
     with open('specs.txt', 'r') as file:
         specs = file.readlines()
+    specs = [line[:-1] for line in specs]
     main_path = specs[0]
     old_wallpaper = specs[1]
+    specs[2] = int(specs[2])
     
     # Load possible wallpapers and weights 
     df = pd.read_csv("wallpaper_data.csv")
     wallpapers = df.loc[df['New or Used'] == 0]
-    wallpapers_list = df.loc[:, 'Names']
-    weights = df.loc[:,'Weight']
+    wallpapers_list = wallpapers.loc[:, 'Names']
+    weights = wallpapers.loc[:,'Weight']
 
     # Pick one with a suitable weight
-    new_random_wallpaper = np.random.choice(wallpapers_list, 1, p=weights)
+    new_random_wallpaper = np.random.choice(wallpapers_list, 1, p=weights / sum(weights))
     new_wallpaper_path = os.path.join(main_path,'New',new_random_wallpaper[0])
     
     # Change Wallpaper
@@ -46,15 +49,16 @@ def Random_Wallpaper():
     Move_Wallpaper(new_random_wallpaper[0])
     Check_empty_folder()
     
-    # Save current wallpaper to text file for future reference and add 1 to count
-    with open('specs.txt', 'r') as file:
-        specs = file.readlines()
-        
-    specs[1] = new_random_wallpaper[0]
+    # Save current wallpaper to text file for future reference and add 1 to count      
+    specs[0] = specs[0] + '\n'
+    specs[1] = new_random_wallpaper[0] + '\n'
     specs[2] += 1
+    specs[2] = str(specs[2]) + '\n'
     
     with open('specs.txt', 'w') as file:
         file.writelines( specs )
+        
+    df.to_csv("wallpaper_data.csv")
     
     
     
@@ -73,7 +77,6 @@ def Check_empty_folder():
         os.rename('New', 'New(1)')
         os.rename('Used', 'New')
         os.rename('New(1)', 'Used')
-        df = pd.read_csv("wallpaper_data.csv")
         df.loc[:, 'New or Used'] = 0
         
         
@@ -83,7 +86,8 @@ def Keep_Wallpaper():
     df = pd.read_csv("wallpaper_data.csv")
     with open('specs.txt', 'r') as file:
         specs = file.readlines()
-    df.loc[df['Names'] == specs[1], 'Kept'] += 1
+    df.loc[df['Names'] == specs[1][:-1], 'Kept'] += 1
+    df.to_csv("wallpaper_data.csv")
        
     
     
@@ -99,7 +103,7 @@ class Change_Wallpaper(tk.Frame):
     def configure_gui(self):
         self.master.title("Wallpaper Picker")
         self.master.geometry("300x75")
-        self.master.resizable(False, False)
+        self.master.resizable(True, True)
         
     def create_widgets(self):
         self.message= tk.Label(self, text="Are you happy with  this wallpaper?")
@@ -127,6 +131,7 @@ if __name__ == '__main__':
     # Need to change this so user path is one from specs file and use chdir
     with open('specs.txt', 'r') as file:
         specs = file.readlines()
+    specs = [line[:-1] for line in specs]
     main_path = specs[0]
     os.chdir(main_path)
     
@@ -136,3 +141,5 @@ if __name__ == '__main__':
     
     
     # Need to do ML stuff here
+    if specs[2]%100 == 0:
+        i=1 #do ML every 100 times

@@ -7,9 +7,7 @@ Can't assume cd'ed into wallpaper folder either
 
 
 
-import ctypes
 import os
-import numpy as np
 import pandas as pd
 import shutil
 
@@ -132,7 +130,7 @@ def Temp_To_New():
                     shutil.move(os.path.join('Temp',folder_name,folder),'New-1')
                     folder = 'New-1'
                 elif folder == 'Temp':
-                    shutil.move(os.path.join('Temp',folder_name,folder),'temp-1')
+                    shutil.move(os.path.join('Temp',folder_name,folder),'Temp-1')
                     folder = 'Temp-1'
                 elif folder == 'Used':
                     shutil.move(os.path.join('temp',folder_name,folder),'Used-1')
@@ -168,7 +166,7 @@ def Temp_To_New():
 
     
     
-def DataFrame_Populate(path):
+def DataFrame_Populate():
     '''start data frame of all images'''
     data = []
     df = pd.DataFrame(data, columns = ['Names','Extension','Kept','Rejected','Total Score','New or Used', 'Weight'])
@@ -180,39 +178,38 @@ def DataFrame_Populate(path):
     for file in newdir_list:
         head = file.split(".")[0]
         tail = file.split(".")[-1]
-    
-    
+            
         # add file and etension to dataframe
-        df2 = pd.DataFrame([[head,tail,0,0,0,0,1]], columns=['Names','Extension','Kept','Rejected','Total Score','Weight'])
+        df2 = pd.DataFrame([[file,tail,0,0,0,0,1/len(newdir_list)]], columns=['Names','Extension','Kept','Rejected','Total Score','New or Used','Weight'])
         df=df.append(df2, ignore_index=True, sort = True)
     
 
     cols = ['Names','Extension','Kept','Rejected','Total Score','New or Used','Weight']
     df = df[cols]
     print(df.head())
-    df.to_csv(os.path.join(path,'wallpaper_data.csv'))
+    df.to_csv('wallpaper_data.csv')
     print('A list of all your wallpapers can be found in your wallpaper folder as a .csv file')
         
         
     # need to analyse each pic at the end for rgb values
-
     
     
     
     
     
     
-def Check_Errors_Folder():
+    
+def Check_Errors_Folder(main_path):
     '''Informs user about the number of errors or delete folder if empty'''
     no_of_errors = len(os.listdir('Errors'))
     if  no_of_errors == 1:
         print("There was 1 incompatible file.")
-        print("It can be found in", os.path.join(path,'Errors'))
+        print("It can be found in", os.path.join(main_path,'Errors'))
         print("If you would like to use this file as a wallpaper, please convert it to a valid format and rerun this program.")
 
     elif no_of_errors > 1:
         print("There were ", no_of_errors," incompatible files.")
-        print("They can be found in", os.path.join(path,'Errors'))
+        print("They can be found in", os.path.join(main_path,'Errors'))
         print("If you would like to use any of those files as wallpapers, please convert them to a valid format and rerun this program.")
     else:
         shutil.rmtree('Errors')
